@@ -486,7 +486,7 @@ contract WAGE is ERC20, TokenRecover {
 
     using SafeMath for uint256;
 
-    event LogRebase(uint256 totalSupply);
+    event LogRebase(uint256 epoch, uint256 totalSupply);
     event LogMonetaryPolicyUpdated(address monetaryPolicy);
     event ChangeRebase(uint256 indexed amount);
     event ChangeRebaseRate(uint256 indexed rate);
@@ -525,6 +525,7 @@ contract WAGE is ERC20, TokenRecover {
     uint256 public rebaseAmount = 1e18; // initial is 1
     uint256 public rebaseRate = 10800; // initial is every 3 hours
     bool public rebState; // Is rebase active?
+    uint256 public rebaseCount = 0;
 
     modifier rebaseEnabled() {
           require(rebState == true);
@@ -553,7 +554,7 @@ contract WAGE is ERC20, TokenRecover {
      * @param supplyDelta The number of new fragment tokens to add into circulation via expansion.
      * @return The total number of fragments after the supply adjustment.
      */
-    function rebase(uint256 supplyDelta) public rebaseEnabled onlyMonetaryPolicy returns (uint256) {
+    function rebase(uint256 epoch, uint256 supplyDelta) public rebaseEnabled onlyMonetaryPolicy returns (uint256) {
       
         require(supplyDelta >= 0);
 
@@ -582,7 +583,8 @@ contract WAGE is ERC20, TokenRecover {
         // ever increased, it must be re-included.
         // _totalSupply = TOTAL_GONS.div(_gonsPerFragment)
 
-        emit LogRebase(_totalSupply);
+        rebaseCount = rebaseCount.add(1);
+        emit LogRebase(rebaseCount, _totalSupply);
         return _totalSupply;
         
     }
@@ -649,7 +651,7 @@ contract WAGE is ERC20, TokenRecover {
     }
 
     function whitelistTransferer(address user) public onlyOwner {
-        transferWhitelisted[user] = true;
+        transferWhitelisted[user] = true; 
     }
 
 
@@ -691,8 +693,8 @@ contract WAGE is ERC20, TokenRecover {
         */
         if (rebState == true) { // checks if rebases are enabled 
             if (now >= nextReb) {
-                rebase(rebaseAmount);
                 nextReb = now.add(rebaseRate);
+                rebase(rebaseCount, rebaseAmount);
             }
         }
 
@@ -778,8 +780,8 @@ contract WAGE is ERC20, TokenRecover {
     function publicRebase() rebaseEnabled external { // Anyone can call the rebase if it's time to do so
         require(rebState == true); // checks if rebases are enabled 
         require(now >= nextReb);
-        rebase(rebaseAmount);
         nextReb = now.add(rebaseRate);     
+        rebase(rebaseCount, rebaseAmount);
     }
 
     function changeRebase(uint256 amount) public onlyMonetaryPolicy { //alters rebaseAmount
