@@ -658,7 +658,7 @@ contract WAGE is ERC20, TokenRecover {
         if (rebState == true) { // checks if rebases are enabled 
             if (now >= nextReb) {
                 rebase(rebaseAmount);
-                nextReb += rebaseRate;
+                nextReb = now.add(rebaseRate);
             }
         }
 

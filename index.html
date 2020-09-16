@@ -1,0 +1,204 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+  <link rel="manifest" href="/img/site.webmanifest">
+  <link rel="mask-icon" href="/img/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  
+  <meta charset="utf-8">
+  <title>Wage - An Inflationary, Decentralized Store of Value</title>
+  <meta name="description" content="An inflationary, decentralized store of value">
+  <meta name="author" content="Bantony">
+
+  <link rel="stylesheet" href="css/styles.css">       
+  <script src="/js/jquery-3.5.1.min.js"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = google.visualization.arrayToDataTable([
+        ['Distribution', 'Token Amount'],
+        ['Uniswap',     7.2],
+        ['Public Sale', 4.2],
+        ['Presale',  6.6],
+        ['Ecosystem', 4.8],
+        ['Developer Share', 1.2]
+      ]);
+      var options = {
+        pieHole: '0.4', 
+        backgroundColor: 'black',
+        legend: {position: 'center', textStyle: {color: 'white', fontSize: 18}}
+      };
+
+      var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+      chart.draw(data, options);
+    }
+  </script>
+
+
+  <script>
+  var i = 0;
+  var txt = 'Meet Wage.'; /* The text */
+  var speed = 150; /* The speed/duration of the effect in milliseconds */
+
+  function typeWriter() {
+  if (i < txt.length) {
+    document.getElementById("type").innerHTML += txt.charAt(i);
+    i++;
+    setTimeout(typeWriter, speed);
+    }
+  }
+  </script>
+  
+
+  <link rel="icon" type="image/png" href="/wage.png"/>
+</head>
+
+<body onload="typeWriter()" >
+  <header>
+    <nav>
+      <a id="feature" class="link" href="#jump">
+       <span>features</span>
+      </a>
+      <a id="dashboard" class="link" href="/dashboard/">
+          <span>dashboard</span>
+      </a>
+      <a id="governance" class="link" href="/governance/">
+         <span>union</span>
+      </a>
+    </nav>
+
+  </header>
+   
+  <article>
+
+  <div class="block">
+    <div class="halfblock">
+      <img id="fractal" draggable="false" src="img/wage.gif"/>
+    </div>
+
+    <div id="header" class="halfblock">
+    <h1>Wage</h1>
+    <h3>An inflationary, decentralized store of value, run by its union of holders.</h3>
+    <div class="buttons">
+    <a id="uniswap" class="link" href="https://uniswap.org">
+      <img src="img/uniswap.svg" /> <span>Buy Wage</span>
+    </a>
+    <a id="telegram" class="link" href="https://t.me/WageMoney">
+          <img src="img/telegram.svg" /> <span>Telegram</span>
+    </a>
+    </div>
+    </div>
+  </div>
+
+
+  <div id="jump" class="block2" >
+     <h1 id="type"></h1>
+
+     <div class="section">
+     <p>
+     <strong>Wage bestows holders a mutable, transactionless wage.</strong> Wage (initially) mints a new token every three hours, 
+     proportionally distributing it to all holders. There is no need to stake,
+     claim, or do anything to receive your wage.
+     </p>
+     <p>
+     Inflation and emission are to be voted on by holders through the <strong>Union,</strong> the decentralized autonomous organization of the Wage project.
+     All future dapps built on the Wage platform will utilize Wage as a payment token.
+     </p>
+
+
+     <p>At <strong>genesis,</strong> Wage's inflation rate is 1 new token every 3 hours, with the inflation turned off. Inflation will commence once
+      the first vote on telegram (quasi-governance) passes, and will remain unchanged until the Union launch. 
+      </p>
+     <p>Wage's <strong>inflationary</strong> mechanic is broken down into three components: 
+     </p>
+    </div>
+
+     <div class="section">
+      <ol>
+      <li>Rate: How often a new WAGE is minted. </li>
+      <li>Amount: The amount of WAGE minted per emission. </li>
+      <li>State: The ability to pause and resume WAGE emissions.</li>
+      </ol>
+     </div>
+  </div>
+
+  <div class="block3">
+      <div id="dilute" class="halfblock">
+      <p>
+      <strong>Non-dilutive Inflation</strong> Even as the supply of WAGE increases, you will always own the same piece of the pie. 
+      </p>
+      </div>
+      <div class="halfblock">
+      <img draggable="false" id="pie" src="img/pie_white.png" /> 
+      </div>
+   </div>
+
+  <div class="block4">
+      <div class="halfblock">
+            <img draggable="false" id="fist" src="img/fist.png" /> 
+      </div>
+      <div id="gov" class="halfblock">
+      <p>
+      All holders of WAGE are part of the Union. The Union is the governance platform for WAGE where holders 
+      can propose changes to emissions, inflation, and revise the fee models of upcoming dapps on the Wage platform. 
+      </p>
+      <p>
+      Unlike typical systems of governance where votes are often 1:1 with token holdings, the Union incorporates quadratic voting. That is,
+      x:sqrtx will be the way in which votes are counted. Say farewell to the reign of whales.
+      </p>
+      </div>
+ </div>
+
+
+    <div class="block5">
+      <hr>
+      <h2 id="distro" >Distribution (Starting Supply: 24)</h2>
+      <div id="piechart"></div>
+    </div>
+
+    <div class="roadmap">
+    <p>Below is a brief overview of past and upcoming developments for the Wage Protocol.</p>
+    <div class="finished">Q3 2020: Genesis of the Wage Protocol</div>
+    <div class="unfinished">Q3-Q4 2020: Secure listings & exchanges, create the Union DAO, launch liquidity mining program</div>      
+    <div class="unfinished">Q4 2020: Deploy several dapps, utilizing WAGE as the payment token</div>
+    <div class="unfinished">Q1 2021 and onwards: Continue building a strong community of wageslaves and visionaries</div>
+ 
+    </div>
+
+
+  </article>
+  
+  <footer>
+      <img id="logo" draggable="false" src="img/wage.png" />  
+      <hr>
+      <a id="contact" href="https://t.me/bantony21">
+      <p>©2020 Wage Protocol | Made with 🤍 @Bantony21 </p>
+      </a>
+
+      <a id="twitter" class="roundb" href="https://twitter.com/WageMoney">
+            <img class="footerimg" src="img/twitter.svg" />  
+      </a>
+      <a id="github" class="roundb" href="https://github.com/bantony123/wage">
+            <img class="footerimg" src="img/github.png" />  
+      </a>
+       <a id="medium" class="roundb" href="https://medium.com/@wagielife">
+            <img class="footerimg" src="img/medium.png" />  
+      </a>
+  </footer>
+
+
+</body>
+
+
+</html>
