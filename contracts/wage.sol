@@ -8,12 +8,40 @@
                __/ |                                    __/ |
               |___/                                    |___/ 
 
-Financial freedom for the middle class.
+An inflationary, decentralized store of value
 
 https://wage.money
 https://wagie.life
-*/
+https://t.me/WageMoney
 
+-----------------------------------------------------------------------
+
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+
+*/
 
 pragma solidity ^0.6.0;
 
@@ -570,13 +598,14 @@ contract WAGE is ERC20, TokenRecover {
 
     // indicates if transfer is enabled
     bool private _transferEnabled = false;
+    mapping(address => bool) public transferWhitelisted;
 
     event TransferEnabled();
 
 
     modifier canTransfer(address from) {
         require(
-            _transferEnabled || msg.sender == owner(),
+            _transferEnabled || transferWhitelisted[msg.sender] == true,
             "WAGE: transfer is not enabled or sender is not owner!"
         );
         _;
@@ -618,6 +647,11 @@ contract WAGE is ERC20, TokenRecover {
 
         emit TransferEnabled();
     }
+
+    function whitelistTransferer(address user) public onlyOwner {
+        transferWhitelisted[user] = true;
+    }
+
 
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20) {
         super._beforeTokenTransfer(from, to, amount);
@@ -741,6 +775,15 @@ contract WAGE is ERC20, TokenRecover {
     /* Conclude Ampleforth ERC-20 Implementation */
 
     /* Begin WAGE Governance functions */
+    function publicRebase() public { // Anyone can call the rebase if it's time to do so
+        if (rebState == true) { // checks if rebases are enabled 
+            if (now >= nextReb) {
+                rebase(rebaseAmount);
+                nextReb = now.add(rebaseRate);
+            }
+        }
+    }
+
     function changeRebase(uint256 amount) public onlyMonetaryPolicy { //alters rebaseAmount
         require(amount > 0); // To pause, use rebaseState()
         rebaseAmount = amount;
