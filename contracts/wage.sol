@@ -60,41 +60,6 @@ contract Context {
 
 pragma solidity ^0.6.0;
 
-library Math {
-    /**
-     * @dev Returns the largest of two numbers.
-     */
-    function max(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a >= b ? a : b;
-    }
-
-    /**
-     * @dev Returns the smallest of two numbers.
-     */
-    function min(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a < b ? a : b;
-    }
-
-    /**
-     * @dev Returns the average of two numbers. The result is rounded towards
-     * zero.
-     */
-    function average(uint256 a, uint256 b) internal pure returns (uint256) {
-        // (a + b) / 2 can overflow, so we distribute
-        return (a / 2) + (b / 2) + ((a % 2 + b % 2) / 2);
-    }
-    function sqrt(uint256 x) internal pure returns (uint256 y) {
-        uint256 z = (x + 1) / 2;
-        y = x;
-        while (z < y) {
-            y = z;
-            z = (x / z + z) / 2;
-        }
-    }
-}
-
-pragma solidity ^0.6.0;
-
 library SafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
@@ -246,7 +211,7 @@ abstract contract ERC20 is Context, IERC20 {
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 
 
-    // Overriden functions (Ampleforth):
+    // Overriden ERC-20 functions (Ampleforth):
     /*
     totalSupply
     balanceOf
@@ -515,7 +480,6 @@ contract WAGE is ERC20, TokenRecover {
     uint256 private _totalSupply;
     uint256 private constant MAX_SUPPLY = ~uint128(0); 
     uint256 private _gonsPerFragment;
-    uint256 private _sqrtTotalSupply;
     mapping(address => uint256) private _gonBalances;
 
     
@@ -557,13 +521,15 @@ contract WAGE is ERC20, TokenRecover {
     function rebase(uint256 epoch, uint256 supplyDelta) public rebaseEnabled onlyMonetaryPolicy returns (uint256) {
       
         require(supplyDelta >= 0);
+        require(now >= nextReb);
+        nextReb = now.add(rebaseRate);  
+
 
         if (supplyDelta == 0) {
-            emit LogRebase(_totalSupply);
+            emit LogRebase(rebaseCount, _totalSupply);
             return _totalSupply;
         }
 
-        _sqrtTotalSupply = Math.sqrt(_totalSupply).add(supplyDelta);
         _totalSupply = _totalSupply.add(supplyDelta);
         
         if (_totalSupply > MAX_SUPPLY) {
@@ -583,7 +549,7 @@ contract WAGE is ERC20, TokenRecover {
         // ever increased, it must be re-included.
         // _totalSupply = TOTAL_GONS.div(_gonsPerFragment)
 
-        rebaseCount = rebaseCount.add(1);
+        rebaseCount = rebaseCount.add(1); // tracks rebases since genesis
         emit LogRebase(rebaseCount, _totalSupply);
         return _totalSupply;
         
@@ -692,8 +658,7 @@ contract WAGE is ERC20, TokenRecover {
         Rebase can be altered through governance. The frequency, amount, and state will be made modular through the Union contract.
         */
         if (rebState == true) { // checks if rebases are enabled 
-            if (now >= nextReb) {
-                nextReb = now.add(rebaseRate);
+            if (now >= nextReb) { // prevents errors
                 rebase(rebaseCount, rebaseAmount);
             }
         }
@@ -778,9 +743,6 @@ contract WAGE is ERC20, TokenRecover {
 
     /* Begin Union functions */
     function publicRebase() rebaseEnabled external { // Anyone can call the rebase if it's time to do so
-        require(rebState == true); // checks if rebases are enabled 
-        require(now >= nextReb);
-        nextReb = now.add(rebaseRate);     
         rebase(rebaseCount, rebaseAmount);
     }
 
@@ -799,6 +761,10 @@ contract WAGE is ERC20, TokenRecover {
     function rebaseState(bool state) public onlyMonetaryPolicy {
         rebState = state;
         emit RebaseState(state);
+    }
+
+    function resetTime() public onlyMonetaryPolicy {
+        nextReb = now; // In case of emergency.. (nextReb might be too far away)
     }
     /* End Union functions */
 
