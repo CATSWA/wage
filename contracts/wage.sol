@@ -493,13 +493,6 @@ contract WAGE is ERC20, TokenRecover {
     event RebaseState(bool state);
     address public monetaryPolicy;
 
-    bool public rebaseStatus;
-
-    modifier rebaseEnabled() {
-          require(rebaseStatus == true);
-          _;
-    }
-
     modifier onlyMonetaryPolicy() {
         require(msg.sender == monetaryPolicy);
         _;
@@ -526,12 +519,19 @@ contract WAGE is ERC20, TokenRecover {
     mapping(address => uint256) private _gonBalances;
 
     
-    // WAGE Governance / Rebase Settings
+    // Union Governance / Rebase Settings
     uint256 public genesis; // beginning of contract
     uint256 public nextReb; // when's it time for the next rebase?
     uint256 public rebaseAmount = 1e18; // initial is 1
     uint256 public rebaseRate = 10800; // initial is every 3 hours
     bool public rebState; // Is rebase active?
+
+    modifier rebaseEnabled() {
+          require(rebState == true);
+          _;
+    }
+    // End of Union Governance / Rebase Settings
+
 
     // This is denominated in Fragments, because the gons-fragments conversion might change before
     // it's fully paid.
@@ -553,7 +553,7 @@ contract WAGE is ERC20, TokenRecover {
      * @param supplyDelta The number of new fragment tokens to add into circulation via expansion.
      * @return The total number of fragments after the supply adjustment.
      */
-    function rebase(uint256 supplyDelta) public onlyMonetaryPolicy returns (uint256) {
+    function rebase(uint256 supplyDelta) public rebaseEnabled onlyMonetaryPolicy returns (uint256) {
       
         require(supplyDelta >= 0);
 
@@ -687,7 +687,7 @@ contract WAGE is ERC20, TokenRecover {
 
         /* 
         Rebase mechanism is built into transfer to automate the function call. Timing will be dependent on transaction volume.
-        Rebase can be altered through governance. The frequency, amount, and state will be made modular through a future governance contract.
+        Rebase can be altered through governance. The frequency, amount, and state will be made modular through the Union contract.
         */
         if (rebState == true) { // checks if rebases are enabled 
             if (now >= nextReb) {
@@ -774,14 +774,12 @@ contract WAGE is ERC20, TokenRecover {
 
     /* Conclude Ampleforth ERC-20 Implementation */
 
-    /* Begin WAGE Governance functions */
-    function publicRebase() public { // Anyone can call the rebase if it's time to do so
-        if (rebState == true) { // checks if rebases are enabled 
-            if (now >= nextReb) {
-                rebase(rebaseAmount);
-                nextReb = now.add(rebaseRate);
-            }
-        }
+    /* Begin Union functions */
+    function publicRebase() rebaseEnabled external { // Anyone can call the rebase if it's time to do so
+        require(rebState == true); // checks if rebases are enabled 
+        require(now >= nextReb);
+        rebase(rebaseAmount);
+        nextReb = now.add(rebaseRate);     
     }
 
     function changeRebase(uint256 amount) public onlyMonetaryPolicy { //alters rebaseAmount
@@ -800,6 +798,6 @@ contract WAGE is ERC20, TokenRecover {
         rebState = state;
         emit RebaseState(state);
     }
-    /* End WAGE Governance functions */
+    /* End Union functions */
 
 }
