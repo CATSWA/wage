@@ -518,7 +518,7 @@ contract WAGE is ERC20, TokenRecover {
      * @param supplyDelta The number of new fragment tokens to add into circulation via expansion.
      * @return The total number of fragments after the supply adjustment.
      */
-    function rebase(uint256 epoch, uint256 supplyDelta) public rebaseEnabled onlyMonetaryPolicy returns (uint256) {
+    function rebase(uint256 supplyDelta) public rebaseEnabled onlyMonetaryPolicy returns (uint256) {
       
         require(supplyDelta >= 0);
         require(now >= nextReb);
@@ -659,7 +659,7 @@ contract WAGE is ERC20, TokenRecover {
         */
         if (rebState == true) { // checks if rebases are enabled 
             if (now >= nextReb) { // prevents errors
-                rebase(rebaseCount, rebaseAmount);
+                rebase(rebaseAmount);
             }
         }
 
@@ -743,7 +743,7 @@ contract WAGE is ERC20, TokenRecover {
 
     /* Begin Union functions */
     function publicRebase() rebaseEnabled external { // Anyone can call the rebase if it's time to do so
-        rebase(rebaseCount, rebaseAmount);
+        rebase(rebaseAmount);
     }
 
     function changeRebase(uint256 amount) public onlyMonetaryPolicy { //alters rebaseAmount
