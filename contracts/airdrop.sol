@@ -219,7 +219,7 @@ contract airdrop is Ownable {
     using SafeERC20 for IERC20;
 
     uint256 public stakingEnd; // What block does staking end?
-    uint256 public _totalSupply;
+    uint256 internal _totalSupply;
     mapping(address => uint256) private _balances;
 
     IERC20 public stakeToken; 
