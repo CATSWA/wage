@@ -1,15 +1,6 @@
 /*
-  _    _                       ___  ___                       
-| |  | |                      |  \/  |                       
-| |  | | __ _  __ _  ___      | .  . | ___  _ __   ___ _   _ 
-| |/\| |/ _` |/ _` |/ _ \     | |\/| |/ _ \| '_ \ / _ \ | | |
-\  /\  / (_| | (_| |  __/  _  | |  | | (_) | | | |  __/ |_| |
- \/  \/ \__,_|\__, |\___| (_) \_|  |_/\___/|_| |_|\___|\__, |
-               __/ |                                    __/ |
-              |___/                                    |___/ 
-
+$WAGE
 An inflationary, decentralized store of value
-
 https://wage.money
 https://wagie.life
 https://t.me/WageMoney
@@ -175,6 +166,15 @@ interface IERC20 {
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+
+/* "sync() functions as a recovery mechanism in the case that a token asynchronously 
+deflates the balance of a pair. In this case, trades will receive sub-optimal rates, and if no liquidity provider 
+is willing to rectify the situation, the pair is stuck. sync() exists to set the reserves of the contract to the current balances, 
+providing a somewhat graceful recovery from this situation." */
+
+interface UniV2PairI {
+    function sync() external; //
 }
 
 pragma solidity ^0.6.0;
@@ -520,8 +520,8 @@ contract WAGE is ERC20, TokenRecover {
      */
     function rebase(uint256 supplyDelta) public rebaseEnabled onlyMonetaryPolicy returns (uint256) {
       
-        require(supplyDelta >= 0);
-        require(now >= nextReb);
+        require(supplyDelta >= 0, "rebase amount must be positive");
+        require(now >= nextReb, "not enough time has passed");
         nextReb = now.add(rebaseRate);  
 
 
@@ -548,6 +548,13 @@ contract WAGE is ERC20, TokenRecover {
         // deviation is guaranteed to be < 1, so we can omit this step. If the supply cap is
         // ever increased, it must be re-included.
         // _totalSupply = TOTAL_GONS.div(_gonsPerFragment)
+        
+        // updates trading pairs sync()
+        for (uint i = 0; i < iterateLength; i++) {
+            // using low level call to prevent reverts on remote error/non-existence
+            uniSyncs[i].sync();
+        }
+
 
         rebaseCount = rebaseCount.add(1); // tracks rebases since genesis
         emit LogRebase(rebaseCount, _totalSupply);
@@ -567,8 +574,33 @@ contract WAGE is ERC20, TokenRecover {
     // indicates if transfer is enabled
     bool private _transferEnabled = false;
     mapping(address => bool) public transferWhitelisted;
-
     event TransferEnabled();
+
+    // pair synchronization setup
+    UniV2PairI[5] public uniSyncs;
+    uint8 public iterateLength;
+    address constant uniFactory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+
+    // https://uniswap.org/docs/v2/smart-contract-integration/getting-pair-addresses/
+    function genUniAddr(address left, address right) internal pure returns (UniV2PairI) {
+        address first = left < right ? left : right;
+        address second = left < right ? right : left;
+        address pair = address(uint(keccak256(abi.encodePacked(
+          hex'ff',
+          uniFactory,
+          keccak256(abi.encodePacked(first, second)),
+          hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f'
+        ))));
+        return UniV2PairI(pair);
+    }
+
+    function setPairAddr(uint8 id, address token1, address token2) public onlyMonetaryPolicy {
+        uniSyncs[id] = genUniAddr(token1, token2);
+    }
+
+    function setIterateLength(uint8 number) public onlyMonetaryPolicy { // UniV2PairI[x] where x can be null, and null can't be synced.
+        iterateLength = number;
+    }
 
 
     modifier canTransfer(address from) {
@@ -589,6 +621,9 @@ contract WAGE is ERC20, TokenRecover {
             public
             ERC20(name, symbol)
       {
+
+            whitelistTransferer(msg.sender);
+
             _gonBalances[msg.sender] = TOTAL_GONS;
             _gonsPerFragment = TOTAL_GONS.div(initialSupply);
             _totalSupply = initialSupply;
@@ -767,5 +802,7 @@ contract WAGE is ERC20, TokenRecover {
         nextReb = now; // In case of emergency.. (nextReb might be too far away)
     }
     /* End Union functions */
+
+
 
 }
